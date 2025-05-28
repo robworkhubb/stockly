@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625883263719",
+    "project_id": "plaza-storage-8833d",
+    "storage_bucket": "plaza-storage-8833d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625883263719:android:86754d24f7b1b981b2e842",
+        "android_client_info": {
+          "package_name": "robertodarcangelo.plazastorage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjz5t6PCJY-JfxamUEFvbyIJLwkgbwiF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
