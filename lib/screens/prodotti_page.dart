@@ -12,24 +12,28 @@ class _ProdottiPageState extends State<ProdottiPage> {
   final CollectionReference prodottiCollection =
   FirebaseFirestore.instance.collection('prodotti');
 
-  void _modificaProdotto(
-      BuildContext context, String docId, Map<String, dynamic> prodotto) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Modifica Prodotto'),
-        content: SingleChildScrollView(
-          child: AddProductForm(
-            prodottoDaModificare: prodotto, onSave: (newProduct) {  },
-          ),
+  void _modificaProdotto(BuildContext context, String docId, Map<String, dynamic> prodotto) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Modifica Prodotto'),
+      content: SingleChildScrollView(
+        child: AddProductForm(
+          prodottoDaModificare: prodotto,
+          onSave: (modifiche) async {
+            if (modifiche != null) {
+              await FirebaseFirestore.instance
+                  .collection('prodotti')
+                  .doc(docId)
+                  .update(modifiche);
+              Navigator.of(context).pop(); // chiude il dialog dopo il salvataggio
+            }
+          },
         ),
       ),
-    ).then((modifiche) async {
-      if (modifiche != null && modifiche is Map<String, dynamic>) {
-        await prodottiCollection.doc(docId).update(modifiche);
-      }
-    });
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
