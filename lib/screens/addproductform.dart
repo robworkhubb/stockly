@@ -43,45 +43,100 @@ class _AddProductFormState extends State<AddProductForm> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 24),
       child: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
+            _buildTextField(
               controller: _nomeController,
-              decoration: InputDecoration(labelText: 'Nome Prodotto'),
+              label: 'Nome Prodotto',
+              icon: Icons.inventory_2_outlined,
               validator: (value) => value == null || value.isEmpty ? 'Campo obbligatorio' : null,
             ),
-            TextFormField(
+            SizedBox(height: 16),
+            _buildTextField(
               controller: _quantitaController,
-              decoration: InputDecoration(labelText: 'Quantità'),
+              label: 'Quantità',
+              icon: Icons.numbers,
               keyboardType: TextInputType.number,
-              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero' : null,
-            ),
-            TextFormField(
-              controller: _sogliaController,
-              decoration: InputDecoration(labelText: 'Soglia minima di avviso'),
-              keyboardType: TextInputType.number,
-              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero' : null,
+              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero valido' : null,
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  final newProduct = {
-                    'nome': _nomeController.text.trim(),
-                    'quantita': int.parse(_quantitaController.text),
-                    'soglia': int.parse(_sogliaController.text),
-                  };
-                  widget.onSave(newProduct); // richiama la callback passando il prodotto
-                }
-              },
-              child: Text('Salva'),
+            _buildTextField(
+              controller: _sogliaController,
+              label: 'Soglia minima di avviso',
+              icon: Icons.warning_amber_outlined,
+              keyboardType: TextInputType.number,
+              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero valido' : null,
+            ),
+            SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  elevation: 4,
+                ),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    final newProduct = {
+                      'nome': _nomeController.text.trim(),
+                      'quantita': int.parse(_quantitaController.text),
+                      'soglia': int.parse(_sogliaController.text),
+                    };
+                    widget.onSave(newProduct);
+                  }
+                },
+                child: Text(
+                  'Salva',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    IconData? icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: icon != null ? Icon(icon, color: Colors.teal) : null,
+        filled: true,
+        fillColor: Colors.teal.shade50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.teal.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.teal, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
