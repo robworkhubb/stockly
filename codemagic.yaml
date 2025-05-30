@@ -7,12 +7,5 @@ workflows:
     scripts:
       - flutter pub get
       - flutter build ios --release --no-codesign
-    code_signing:
-      ios:
-        distribution_type: app-store
-        automatic: false
-        certificate: $APPLE_CERTIFICATE
-        certificate_password: $APPLE_CERTIFICATE_PASSWORD
-        provisioning_profile: $APPLE_PROVISIONING_PROFILE
     artifacts:
       - build/ios/ipa/*.ipa
