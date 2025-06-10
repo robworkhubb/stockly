@@ -17,9 +17,12 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
+      return const FirebaseOptions(
+        apiKey: 'AIzaSyAjz5t6PCJY-JfxamUEFvbyIJLwkgbwiF4',
+        appId: '1:625883263719:android:86754d24f7b1b981b2e842',
+        messagingSenderId: '625883263719',
+        projectId: 'plaza-storage-8833d',
+        storageBucket: 'plaza-storage-8833d.firebasestorage.app',
       );
     }
     switch (defaultTargetPlatform) {

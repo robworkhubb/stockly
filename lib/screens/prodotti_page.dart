@@ -172,6 +172,16 @@ class _ProdottiPageState extends State<ProdottiPage> {
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                IconButton(onPressed: () async {
+                                  int quantitaCorrente = prodotto['quantita'] ?? 0;
+                                  if (quantitaCorrente > 0) {
+                                    await prodottiCollection.doc(doc.id).update({'quantita': quantitaCorrente - 1});
+                                  }
+                                }, icon: Icon(Icons.remove), color: Colors.red),
+                                IconButton(onPressed: () async {
+                                  int quantitaCorrente = prodotto['quantita'] ?? 0;
+                                  await prodottiCollection.doc(doc.id).update({'quantita': quantitaCorrente + 1});
+                                }, icon: Icon(Icons.add), color: Colors.green),
                                 IconButton(
                                   onPressed: () => _modificaProdotto(context, doc.id, prodotto),
                                   icon: Icon(Icons.edit_outlined, color: Colors.blue,),
