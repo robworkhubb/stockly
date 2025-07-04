@@ -46,26 +46,6 @@ Le notifiche push **locali** vengono attivate all'avvio dell'app (nel `initState
 
 Le notifiche usano la libreria [`flutter_local_notifications`](https://pub.dev/packages/flutter_local_notifications).
 
-## 📦 Dipendenze principali
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  provider: ^6.1.1
-  flutter_local_notifications: ^15.1.0
-🧠 Stato dell'app
-✅ MVP completato
-
-🔄 Prossimi obiettivi:
-
-Salvataggio dati persistente (es. Firebase o SQLite)
-
-Possibilità di modificare/eliminare un prodotto
-
-Backup su cloud
-
-UI migliorata per la gestione di magazzini complessi
 
 🛠️ Come avviare l'app
 Clona il repository:
