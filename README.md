@@ -1,73 +1,93 @@
-PLAZA_STORAGE
+# 📦 Plaza Storage
 
-Streamline Your Warehouse Management with Ease
+**Plaza Storage** è un'app mobile Flutter progettata per la gestione di un piccolo magazzino. Permette di aggiungere, monitorare e ricevere notifiche sui prodotti in stock. L'app è pensata per essere semplice, veloce ed efficace, ideale per negozi, laboratori o piccole attività.
 
-last-commit repo-top-language repo-language-count
-Built with the tools and technologies:
+## 🚀 Funzionalità principali
 
-JSON Markdown Swift Gradle Dart XML Kotlin YAML
+- ✅ Aggiunta rapida dei prodotti con nome, quantità, soglia minima, descrizione.
+- 📉 Visualizzazione prodotti esauriti o sotto soglia.
+- 🔔 Notifiche locali automatiche sui prodotti critici.
+- 🏠 Interfaccia divisa in 3 schermate principali: Home, Aggiungi, Prodotti.
+- 📆 Data corrente mostrata nella home.
+- 📱 UI moderna e intuitiva.
+- 🔄 Aggiornamento in tempo reale dopo l'aggiunta o modifica dei prodotti.
 
-Table of Contents
+## 📸 Screenshot
 
-Overview
-Getting Started
-Prerequisites
-Installation
-Usage
-Testing
-Overview
+*(Inserisci qui gli screenshot delle tre schermate principali: Home, Aggiungi prodotto, Lista prodotti)*
 
-Plaza_storage is a powerful framework designed to accelerate the development of Flutter-based warehouse management applications.
+## 📁 Struttura del progetto
 
-Why Plaza_storage?
+lib/
+├── main.dart
+├── models/
+│ └── product.dart
+├── services/
+│ └── notification_service.dart
+├── screens/
+│ ├── home_page.dart
+│ ├── add_product_page.dart
+│ └── product_list_page.dart
+├── widgets/
+│ └── product_card.dart
+└── providers/
+└── product_provider.dart
 
-This project aims to streamline the development process for users new to Flutter while enhancing efficiency in warehouse operations. The core features include:
+markdown
+Copia
+Modifica
 
-📦 User-Friendly Interface: Simplifies app creation for new Flutter developers, reducing the learning curve.
-📊 Inventory Management: Streamlines warehouse operations with effective tracking and management capabilities.
-🔥 Firebase Integration: Leverages Firebase for seamless data storage and enhanced user engagement.
-⚡ Real-Time Updates: Provides dynamic updates to product inventory, ensuring users have the latest information.
-🎨 Customizable Launch Screens: Allows for personalized branding and user experience right from the start.
-✅ Robust Testing Framework: Ensures code quality and reliability through comprehensive unit testing.
-Getting Started
+## 🔔 Notifiche
 
-Prerequisites
-This project requires the following dependencies:
+Le notifiche push **locali** vengono attivate all'avvio dell'app (nel `initState` della `HomePage`) e avvisano l'utente in caso di:
 
-Programming Language: unknown
-Package Manager: Pub, Gradle
-Installation
-Build plaza_storage from the source and intsall dependencies:
+- ❌ Prodotti esauriti (quantità = 0)
+- ⚠️ Prodotti sotto soglia (quantità ≤ soglia minima)
 
-Clone the repository:
+Le notifiche usano la libreria [`flutter_local_notifications`](https://pub.dev/packages/flutter_local_notifications).
 
-❯ git clone https://github.com/robworkhubb/plaza_storage
-Navigate to the project directory:
+## 📦 Dipendenze principali
 
-❯ cd plaza_storage
-Install the dependencies:
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.1
+  flutter_local_notifications: ^15.1.0
+🧠 Stato dell'app
+✅ MVP completato
 
-Using pub:
+🔄 Prossimi obiettivi:
 
-❯ pub get
-Using gradle:
+Salvataggio dati persistente (es. Firebase o SQLite)
 
-❯ gradle build
-Usage
-Run the project with:
+Possibilità di modificare/eliminare un prodotto
 
-Using pub:
+Backup su cloud
 
-dart {entrypoint}
-Using gradle:
+UI migliorata per la gestione di magazzini complessi
 
-gradle run
-Testing
-Plaza_storage uses the {test_framework} test framework. Run the test suite with:
+🛠️ Come avviare l'app
+Clona il repository:
 
-Using pub:
+bash
+Copia
+Modifica
+git clone https://github.com/tuo-username/plaza-storage.git
+Installa le dipendenze:
 
-pub run test
-Using gradle:
+bash
+Copia
+Modifica
+flutter pub get
+Avvia l'app:
 
-gradle test
+bash
+Copia
+Modifica
+flutter run
+👨‍💻 Autore
+Sviluppato con ❤️ da Roberto – Studente e sviluppatore Flutter junior.
+
+Se ti piace il progetto, lascia una ⭐ su GitHub o contattami per collaborazioni!
+
