@@ -1,7 +1,14 @@
+// ignore_for_file: unused_import, unused_element, unused_local_variable
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/product_card.dart';
+import '../widgets/main_button.dart';
+import '../widgets/fornitore_dialog.dart';
+import 'package:provider/provider.dart';
+import '../provider/product_provider.dart';
 
 class OrdineRapidoPage extends StatefulWidget {
   const OrdineRapidoPage({Key? key}) : super(key: key);
@@ -15,44 +22,38 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
   String? fornitoreSelezionato;
 
   void _inviaOrdineWhatsapp(
-      List<Map<String, dynamic>> prodottiDaOrdinare) async {
+    List<Map<String, dynamic>> prodottiDaOrdinare,
+  ) async {
     if (prodottiDaOrdinare.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Nessun prodotto da ordinare")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Nessun prodotto da ordinare")));
       return;
     }
 
     if (fornitoreSelezionato == null ||
         !fornitori.containsKey(fornitoreSelezionato)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Seleziona un fornitore valido")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Seleziona un fornitore valido")));
       return;
     }
     String numero = fornitori[fornitoreSelezionato]!;
 
     final prefisso = '+39';
-    if(!numero.startsWith(prefisso)){
+    if (!numero.startsWith(prefisso)) {
       numero = prefisso + numero;
     }
-
 
     String messaggio = Uri.encodeComponent(
       "📦 Ordine rapido da Plaza Storage\n" +
           prodottiDaOrdinare
               .map((p) {
-            int suggerita = (p['soglia'] as int) * 2;
-            return "- ${p['nome']} x $suggerita";
-          })
+                int suggerita = (p['soglia'] as int) * 2;
+                return "- ${p['nome']} x $suggerita";
+              })
               .join("\n") +
-          "\n📅 Data: ${DateTime
-              .now()
-              .day}/${DateTime
-              .now()
-              .month}/${DateTime
-              .now()
-              .year}",
+          "\n📅 Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
     );
 
     final url = Uri.parse("https://wa.me/$numero?text=$messaggio");
@@ -66,33 +67,158 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
     }
   }
 
-  Future<void> _aggiungiFornitore(String nome, String numero) async{
+  Future<void> _aggiungiFornitore(String nome, String numero) async {
     await FirebaseFirestore.instance.collection('fornitori').add({
       'nome': nome,
       'numero': numero,
     });
   }
 
+  void _modificaFornitore(String nome, String numero, String docId) {
+    final nomeController = TextEditingController(text: nome);
+    final numeroController = TextEditingController(text: numero);
+    final formKey = GlobalKey<FormState>();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text("Modifica Fornitore"),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nomeController,
+                  decoration: InputDecoration(labelText: "Nome fornitore"),
+                  validator:
+                      (value) =>
+                          value == null || value.trim().isEmpty
+                              ? "Inserisci un nome valido"
+                              : null,
+                ),
+                SizedBox(height: 12),
+                TextFormField(
+                  controller: numeroController,
+                  decoration: InputDecoration(labelText: "Numero WhatsApp"),
+                  keyboardType: TextInputType.phone,
+                  validator:
+                      (value) =>
+                          value == null ||
+                                  value.trim().isEmpty ||
+                                  value.length < 9
+                              ? "Numero non valido"
+                              : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Annulla"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final nuovoNome = nomeController.text.trim();
+                await FirebaseFirestore.instance
+                    .collection('fornitori')
+                    .doc(docId)
+                    .update({
+                      'nome': nuovoNome,
+                      'numero': numeroController.text.trim(),
+                    });
+                Navigator.of(context).pop();
+                if (fornitoreSelezionato == nome) {
+                  setState(() {
+                    fornitoreSelezionato = nuovoNome;
+                  });
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Fornitore aggiornato!")),
+                );
+              },
+              child: Text("Salva"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _rimuoviFornitore(String docId) async {
+    String? nomeEliminato;
+    fornitori.forEach((nome, id) {
+      if (_fornitoriId[nome] == docId) nomeEliminato = nome;
+    });
+    final conferma = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Conferma eliminazione"),
+            content: Text("Vuoi davvero eliminare questo fornitore?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Annulla"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Elimina"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              ),
+            ],
+          ),
+    );
+    if (conferma == true) {
+      await FirebaseFirestore.instance
+          .collection('fornitori')
+          .doc(docId)
+          .delete();
+      setState(() {
+        if (fornitoreSelezionato == nomeEliminato) {
+          fornitoreSelezionato =
+              fornitori.keys.where((n) => n != nomeEliminato).isNotEmpty
+                  ? fornitori.keys.where((n) => n != nomeEliminato).first
+                  : null;
+        }
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Fornitore eliminato!")));
+    }
+  }
+
   void _caricaFornitori() {
     FirebaseFirestore.instance.collection('fornitori').snapshots().listen((
-        snapshot) {
+      snapshot,
+    ) {
       Map<String, String> mappaFornitori = {};
+      Map<String, String> mappaId = {};
       for (var doc in snapshot.docs) {
         final dati = doc.data();
         final nome = dati['nome'] ?? '';
         final numero = dati['numero'] ?? '';
         if (nome.isNotEmpty && numero.isNotEmpty) {
           mappaFornitori[nome] = numero;
+          mappaId[nome] = doc.id;
         }
       }
       setState(() {
         fornitori = mappaFornitori;
+        _fornitoriId = mappaId;
         if (fornitoreSelezionato == null && fornitori.isNotEmpty) {
           fornitoreSelezionato = fornitori.keys.first;
         }
       });
     });
   }
+
+  Map<String, String> _fornitoriId = {};
 
   void _mostraDialogAggiungiFornitore() {
     final nomeController = TextEditingController();
@@ -103,7 +229,9 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.store, color: Colors.teal),
@@ -121,7 +249,9 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                   decoration: InputDecoration(
                     labelText: "Nome fornitore",
                     prefixIcon: Icon(Icons.badge),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -136,11 +266,15 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                   decoration: InputDecoration(
                     labelText: "Numero WhatsApp",
                     prefixIcon: Icon(Icons.phone),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty || value.length < 9) {
+                    if (value == null ||
+                        value.trim().isEmpty ||
+                        value.length < 9) {
                       return "Numero non valido";
                     }
                     return null;
@@ -176,7 +310,9 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -184,7 +320,6 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
       },
     );
   }
-
 
   @override
   void initState() {
@@ -213,30 +348,97 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                     border: Border.all(color: Colors.teal),
                     color: Colors.teal.shade50,
                   ),
-                  child: DropdownButton<String>(
-                    value: fornitoreSelezionato,
-                    isExpanded: true,
-                    underline: SizedBox(),
-                    items: fornitori.keys.map((nomeFornitore) {
-                      return DropdownMenuItem<String>(
-                        value: nomeFornitore,
-                        child: Text(nomeFornitore, style: TextStyle(fontWeight: FontWeight.w600)),
-                      );
-                    }).toList(),
-                    onChanged: (nuovo) {
-                      if (nuovo != null) {
-                        setState(() {
-                          fornitoreSelezionato = nuovo;
-                        });
-                      }
-                    },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: fornitoreSelezionato,
+                          isExpanded: true,
+                          underline: SizedBox(),
+                          items:
+                              fornitori.keys.map((nomeFornitore) {
+                                return DropdownMenuItem<String>(
+                                  value: nomeFornitore,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        nomeFornitore,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.edit,
+                                          color: Colors.blue,
+                                          size: 20,
+                                        ),
+                                        onPressed: () {
+                                          final docId =
+                                              _fornitoriId[nomeFornitore]!;
+                                          _modificaFornitore(
+                                            nomeFornitore,
+                                            fornitori[nomeFornitore]!,
+                                            docId,
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                          size: 20,
+                                        ),
+                                        onPressed: () {
+                                          final docId =
+                                              _fornitoriId[nomeFornitore]!;
+                                          _rimuoviFornitore(docId);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                          onChanged: (nuovo) {
+                            if (nuovo != null) {
+                              setState(() {
+                                fornitoreSelezionato = nuovo;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 8),
                 TextButton.icon(
-                  onPressed: _mostraDialogAggiungiFornitore,
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (ctx) => FornitoreDialog(
+                            onSave: (nome, numero) async {
+                              await FirebaseFirestore.instance
+                                  .collection('fornitori')
+                                  .add({'nome': nome, 'numero': numero});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Fornitore aggiunto con successo",
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                    );
+                  },
                   icon: Icon(Icons.add, color: Colors.teal),
-                  label: Text("Aggiungi nuovo fornitore", style: TextStyle(color: Colors.teal)),
+                  label: Text(
+                    "Aggiungi nuovo fornitore",
+                    style: TextStyle(color: Colors.teal),
+                  ),
                 ),
               ],
             ),
@@ -248,58 +450,38 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                 fornitoreSelezionato != null
                     ? "Numero: ${fornitori[fornitoreSelezionato!]}"
                     : "Seleziona un fornitore",
-                style: TextStyle(fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal[700]),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal[700],
+                ),
               ),
             ),
             SizedBox(height: 16),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('prodotti')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Errore nel caricamento dati'));
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+              child: Consumer<ProductProvider>(
+                builder: (context, provider, _) {
+                  final prodottiDaOrdinare =
+                      provider.prodotti
+                          .where(
+                            (p) => p.quantita == 0 || p.quantita < p.soglia,
+                          )
+                          .toList();
+                  if (provider.loading) {
                     return Center(child: CircularProgressIndicator());
                   }
-
-                  final allProdotti = snapshot.data!.docs.map((doc) {
-                    final data = doc.data()! as Map<String, dynamic>;
-                    data['id'] = doc.id;
-                    return data;
-                  }).toList();
-
-                  final prodottiDaOrdinare = allProdotti.where((p) =>
-                  p['quantita'] == 0 || p['quantita'] < p['soglia']).toList();
-
                   if (prodottiDaOrdinare.isEmpty) {
                     return Center(child: Text('Nessun prodotto da ordinare'));
                   }
-
                   return ListView.builder(
                     itemCount: prodottiDaOrdinare.length,
                     itemBuilder: (context, index) {
                       final prodotto = prodottiDaOrdinare[index];
-                      final nome = prodotto['nome'] ?? 'Nome mancante';
-                      final quantitaSuggerita = (prodotto['soglia'] as int) * 2;
-
-                      return Card(
-                        margin: EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 3,
-                        child: ListTile(
-                          leading: Icon(
-                              Icons.shopping_cart_outlined, color: Colors.teal),
-                          title: Text(nome,
-                              style: TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text("Suggerito: $quantitaSuggerita unità"),
-                        ),
+                      return ProductCard(
+                        nome: prodotto.nome,
+                        quantita: prodotto.quantita,
+                        soglia: prodotto.soglia,
+                        onEdit: null,
                       );
                     },
                   );
@@ -309,34 +491,26 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.send, color: Colors.white),
-                  label: Text("Genera ordine WhatsApp",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 48),
-                    backgroundColor: Colors.green,
-                    textStyle: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    elevation: 6,
-                  ),
+                child: MainButton(
+                  label: "Genera ordine WhatsApp",
+                  icon: Icons.send,
+                  color: Colors.green,
                   onPressed: () async {
-                    final snapshot = await FirebaseFirestore.instance
-                        .collection('prodotti').get();
-                    final prodottiDaOrdinare = snapshot.docs.map((doc) {
-                      final data = doc.data();
-                      data['id'] = doc.id;
-                      return data;
-                    }).where((p) =>
-                    p['quantita'] == 0 || p['quantita'] < p['soglia']).toList();
-
+                    final provider = Provider.of<ProductProvider>(
+                      context,
+                      listen: false,
+                    );
+                    final prodottiDaOrdinare =
+                        provider.prodotti
+                            .where(
+                              (p) => p.quantita == 0 || p.quantita < p.soglia,
+                            )
+                            .toList();
                     _inviaOrdineWhatsapp(
-                        List<Map<String, dynamic>>.from(prodottiDaOrdinare));
-
+                      prodottiDaOrdinare.map((p) => p.toJson()).toList(),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Ordine WhatsApp generato!'))
+                      SnackBar(content: Text('Ordine WhatsApp generato!')),
                     );
                   },
                 ),
@@ -348,4 +522,3 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
     );
   }
 }
-

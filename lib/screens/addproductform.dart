@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:plaza_storage/screens/addproductform.dart' as form;
-import 'package:plaza_storage/screens/prodotti_page.dart' as prodotti;
-
 
 // Il tuo AddProductForm lo puoi lasciare identico a quello che hai.
 
