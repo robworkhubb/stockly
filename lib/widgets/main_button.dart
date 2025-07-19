@@ -14,7 +14,7 @@ class MainButton extends StatelessWidget {
     this.icon,
     this.color,
     this.textColor,
-  }) : super(key: key);
+  }) : super(key: key); // Costruttore const: ottimo per performance
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class MainButton extends StatelessWidget {
         icon:
             icon != null
                 ? Icon(icon, color: textColor ?? Colors.white)
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(), // const
         label: Text(
           label,
           style: TextStyle(
@@ -36,7 +36,7 @@ class MainButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color ?? Colors.teal,
           foregroundColor: textColor ?? Colors.white,
-          minimumSize: Size(double.infinity, 48),
+          minimumSize: const Size(double.infinity, 48), // const
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),

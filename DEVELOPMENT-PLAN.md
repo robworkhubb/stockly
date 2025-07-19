@@ -1,6 +1,6 @@
-# Plaza Storage
+# Stockely – Piano di sviluppo
 
-**Plaza Storage** è un'app mobile realizzata in Flutter per la gestione semplificata del magazzino.  
+**Stockely** è un'app mobile realizzata in Flutter per la gestione semplificata del magazzino.  
 Permette all'utente di aggiungere, modificare e monitorare prodotti, notificando automaticamente quando un prodotto è esaurito o sotto soglia.
 
 ### 🎯 Obiettivi principali
@@ -21,7 +21,129 @@ Permette all'utente di aggiungere, modificare e monitorare prodotti, notificando
 - Navigazione a schede (Home, Aggiunta, Prodotti).
 - Trigger notifiche alla partenza dell’app (`initState`).
 
-### 📦 Da fare / refactoring in corso
-- Miglioramento UI/UX con componenti riutilizzabili e tema coerente.
-- Pulizia codice, rimozione logiche duplicate.
-- Modularizzazione e separazione di responsabilità nei widget.
+## 🚀 OTTIMIZZAZIONE
+
+### 1. Logica principale (main.dart, provider)
+- Rimosso l’uso di const dove non supportato dai costruttori delle pagine per evitare errori linter.
+- Aggiunti commenti per suggerire l’uso di const e IndexedStack dove possibile per migliorare performance e mantenimento stato tra tab.
+- In `ProductProvider`:
+  - Rimossi i print di debug in produzione.
+  - Notifica i listener solo se la lista prodotti cambia davvero.
+  - Suggerito l’uso di UnmodifiableListView per esporre la lista prodotti in sola lettura.
+  - Aggiornamento ottimizzato della quantità senza ricaricare tutta la lista.
+
+### 2. Schermate
+- In `home_page.dart`:
+  - Uso di const per widget statici dove possibile.
+  - Calcoli dei filtri (prodotti sotto soglia, esauriti, ecc.) spostati fuori dai widget per evitare calcoli ripetuti.
+  - Suggerito l’uso di ListView.builder se la lista dei prodotti cresce molto.
+  - Nota su stream non utilizzato: valutare se integrarlo o rimuoverlo.
+  - Suggerito l’uso di un logger invece di print per la gestione degli errori in produzione.
+
+- In `prodotti_page.dart`:
+  - Uso di const per widget statici dove possibile.
+  - Se la lista prodotti supera 20 elementi, viene usato ListView.builder invece di Column per performance.
+  - Suggerita la modularizzazione dei dialog in widget separati se crescono.
+  - Commenti su best practice e ottimizzazione.
+
+### 3. Widget
+- Suggerito di rendere const i widget personalizzati dove possibile.
+- Suddividere la UI in widget più piccoli e riutilizzabili per ridurre i rebuild.
+- Se si usano immagini remote, suggerito l’uso di caching.
+
+- In `ProductCard`:
+  - Costruttore const, uso di const per le icone, getter helper per leadingIcon.
+- In `InfoBox`:
+  - Costruttore const, uso di const per widget statici, suggerimento di passare valori const dal chiamante.
+- In `MainButton`:
+  - Costruttore const, uso di const per widget statici, suggerimento di passare valori const dal chiamante.
+- In `FornitoreDialog`:
+  - Costruttore const, uso di const per widget statici, nota su modularizzazione campi e gestione controller per evitare memory leak.
+
+### Best practice generali
+- Profiling con Flutter DevTools per individuare colli di bottiglia.
+- Chiudere sempre controller/stream nei widget stateful.
+- Mantenere il file pubspec.yaml pulito da dipendenze inutilizzate.
+- Aggiornare Flutter e i pacchetti per beneficiare delle ultime ottimizzazioni.
+
+# Aggiornamento 2025: Analitiche e Refactoring Modello
+
+## Refactoring Modello Product
+- Il modello Product ora include: categoria, prezzoUnitario, consumati, ultimaModifica.
+- Rimosso il campo fornitore da tutte le istanze e riferimenti.
+
+## Provider
+- I metodi del provider ora espongono aggregazioni per dashboard: top consumati, distribuzione per categoria, spesa mensile.
+- Tutte le creazioni/aggiornamenti di Product ora richiedono i nuovi parametri obbligatori.
+
+## Form e UI
+- Il form di aggiunta/modifica prodotto ora include categoria e prezzo unitario.
+- Tutte le schermate sono state aggiornate per usare il nuovo modello.
+
+## Dashboard Analitica
+- Aggiunta una pagina dashboard che mostra:
+  - Top 5 prodotti consumati (bar chart)
+  - Distribuzione per categoria (pie chart)
+  - Spesa mensile totale (line chart)
+- I dati sono aggregati dal provider e visualizzati con fl_chart.
+
+## Firestore
+- Tutte le query e i salvataggi sono ora coerenti con il nuovo modello.
+- I metodi toJson/fromJson sono stati sostituiti da toFirestore/fromFirestore.
+
+## Migrazione
+- Tutti i riferimenti a fornitore sono stati rimossi.
+- I dati esistenti devono essere migrati per includere i nuovi campi obbligatori.
+
+# Changelog 2025
+
+- Refactoring modello Product: aggiunti categoria, prezzoUnitario, consumati, ultimaModifica.
+- Dashboard analitica: top 5 prodotti consumati, distribuzione per categoria, spesa mensile totale.
+- Provider aggiornato per aggregazioni e performance.
+- UI e form modernizzati e coerenti.
+- Query Firestore ottimizzate e coerenti con il nuovo modello.
+- Rimozione campo fornitore e metodi toJson/fromJson.
+- Best practice di sviluppo e manutenzione documentate.
+
+# Aggiornamenti 2025
+
+- L'app si chiama ora **Stockely** (ex Plaza Storage).
+- Refactoring completo del modello Product: aggiunti categoria, prezzoUnitario, consumati, ultimaModifica.
+- Dashboard analitica con grafici moderni (fl_chart): top 5 prodotti consumati, distribuzione per categoria, spesa mensile totale.
+- Provider aggiornato per aggregazioni e performance.
+- UI e form modernizzati e coerenti.
+- Query Firestore ottimizzate e coerenti con il nuovo modello.
+- Tutti gli import ora sono `package:stockely/...`.
+
+# Esempi di utilizzo funzioni
+
+## Ottenere metriche dal provider
+
+```dart
+final provider = Provider.of<ProductProvider>(context);
+
+// Top 5 prodotti consumati
+final topProducts = provider.topConsumati();
+
+// Distribuzione per categoria
+final categoryDist = provider.distribuzionePerCategoria();
+
+// Spesa mensile totale
+final monthlyExpense = provider.spesaMensile();
+```
+
+## Modificare/estendere le funzioni
+
+- Per cambiare la logica di aggregazione, modifica i metodi in `product_provider.dart`.
+- Per aggiungere nuove metriche, crea nuovi metodi che aggregano i dati della lista `prodotti`.
+- Per visualizzare nuove metriche nella dashboard, aggiungi una nuova Card e il relativo grafico in `dashboard_page.dart`.
+
+Esempio: aggiungere una metrica "prodotti mai consumati":
+```dart
+List<Product> maiConsumati() {
+  return prodotti.where((p) => p.consumati == 0).toList();
+}
+```
+
+Integra la funzione nella dashboard come vuoi!
+

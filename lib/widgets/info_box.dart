@@ -16,7 +16,7 @@ class InfoBox extends StatelessWidget {
     required this.gradientColors,
     required this.icon,
     required this.iconColor,
-  }) : super(key: key);
+  }) : super(key: key); // Costruttore const: ottimo per performance
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +31,12 @@ class InfoBox extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6), // const
             blurRadius: 12,
           ),
         ],
       ),
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16), // const
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,7 +46,7 @@ class InfoBox extends StatelessWidget {
                 backgroundColor: Colors.white.withOpacity(0.2),
                 child: Icon(icon, color: iconColor),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8), // const
               Text(
                 title,
                 style: TextStyle(
@@ -57,10 +57,10 @@ class InfoBox extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10), // const
           Text(
             '$value',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
               fontWeight: FontWeight.bold,

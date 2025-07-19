@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:625883263719:android:86754d24f7b1b981b2e842",
+        "mobilesdk_app_id": "1:625883263719:android:f174994d000b94d7b2e842",
         "android_client_info": {
-          "package_name": "robertodarcangelo.plazastorage"
+          "package_name": "com.stockely.app"
         }
       },
       "oauth_client": [],

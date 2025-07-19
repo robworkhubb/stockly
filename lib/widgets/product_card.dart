@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class ProductCard extends StatelessWidget {
@@ -8,6 +10,8 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onDecrement;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final bool showEditDelete;
+  final int? suggerita;
 
   const ProductCard({
     Key? key,
@@ -18,58 +22,213 @@ class ProductCard extends StatelessWidget {
     this.onDecrement,
     this.onEdit,
     this.onDelete,
-  }) : super(key: key);
+    this.showEditDelete = true,
+    this.suggerita,
+  }) : super(key: key); // Costruttore const: ottimo per performance
+
+  // Ottimizzazione: puoi usare un getter per l'icona
 
   @override
   Widget build(BuildContext context) {
-    Icon leadingIcon;
+    Color bgColor;
+    Color iconBg;
+    IconData iconData;
+    Color iconColor;
     if (quantita == 0) {
-      leadingIcon = Icon(Icons.error, color: Colors.red);
+      bgColor = const Color(0xFFFFF1F1); // rosso chiaro
+      iconBg = const Color(0xFFFF5252);
+      iconData = Icons.error_outline;
+      iconColor = Colors.white;
     } else if (quantita < soglia) {
-      leadingIcon = Icon(Icons.warning, color: Colors.orange);
+      bgColor = const Color(0xFFFFF8E1); // giallo chiaro
+      iconBg = const Color(0xFFFFB300);
+      iconData = Icons.warning_amber_rounded;
+      iconColor = Colors.white;
     } else {
-      leadingIcon = Icon(Icons.check_circle, color: Colors.green);
+      bgColor = const Color(0xFFE8F5E9); // verde chiaro
+      iconBg = const Color(0xFF43A047);
+      iconData = Icons.check_circle_outline;
+      iconColor = Colors.white;
     }
-
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 3,
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 0),
-      child: ListTile(
-        leading: leadingIcon,
-        title: Text(
-          nome,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        subtitle: Text(
-          'Quantità: $quantita  Soglia: $soglia',
-          style: TextStyle(color: Colors.grey[600], fontSize: 14),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      color: bgColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (onDecrement != null)
-              IconButton(
-                icon: Icon(Icons.remove),
-                color: Colors.red,
-                onPressed: onDecrement,
+            // Leading icon in colored circle
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Icon(iconData, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 16),
+            // Product info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nome,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF212121),
+                    ),
+                  ),
+                  if (suggerita == -1)
+                    ...[]
+                  else if (suggerita != null) ...[
+                    Text(
+                      'Quantità suggerita: $suggerita',
+                      style: const TextStyle(
+                        color: Color(0xFF009688),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Text(
+                          'Quantità: ',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 15,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 22),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '$quantita',
+                            style: TextStyle(
+                              color:
+                                  quantita == 0
+                                      ? const Color(0xFFFF5252)
+                                      : quantita < soglia
+                                      ? const Color(0xFFFFB300)
+                                      : const Color(0xFF43A047),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Soglia: ',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 15,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 22),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '$soglia',
+                            style: const TextStyle(
+                              color: Color(0xFF009688),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        if (onDecrement != null)
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: const Icon(Icons.remove, size: 18),
+                              color: Colors.red,
+                              onPressed: onDecrement,
+                              splashRadius: 20,
+                            ),
+                          ),
+                        if (onIncrement != null)
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: const Icon(Icons.add, size: 18),
+                              color: Colors.green,
+                              onPressed: onIncrement,
+                              splashRadius: 20,
+                            ),
+                          ),
+                        if (showEditDelete && onEdit != null)
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue,
+                                size: 18,
+                              ),
+                              onPressed: onEdit,
+                              splashRadius: 20,
+                            ),
+                          ),
+                        if (showEditDelete && onDelete != null)
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              onPressed: onDelete,
+                              splashRadius: 20,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
-            if (onIncrement != null)
-              IconButton(
-                icon: Icon(Icons.add),
-                color: Colors.green,
-                onPressed: onIncrement,
-              ),
-            if (onEdit != null)
-              IconButton(
-                icon: Icon(Icons.edit_outlined, color: Colors.blue),
-                onPressed: onEdit,
-              ),
-            if (onDelete != null)
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: Colors.red),
-                onPressed: onDelete,
-              ),
+            ),
           ],
         ),
       ),

@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "robertodarcangelo.plazastorage"
+        applicationId = "com.stockely.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class FornitoreDialog extends StatelessWidget {
   final void Function(String nome, String numero) onSave;
 
-  const FornitoreDialog({Key? key, required this.onSave}) : super(key: key);
+  const FornitoreDialog({Key? key, required this.onSave})
+    : super(key: key); // Costruttore const: ottimo per performance
 
   @override
   Widget build(BuildContext context) {
@@ -11,13 +12,15 @@ class FornitoreDialog extends StatelessWidget {
     final numeroController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // Nota: se il dialog cresce, modularizza i campi in widget separati
+    // Nota: se il dialog diventa stateful, sposta i controller fuori dal build per evitare memory leak
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(Icons.store, color: Colors.teal),
-          SizedBox(width: 8),
-          Text("Aggiungi Fornitore"),
+          const Icon(Icons.store, color: Colors.teal), // const
+          const SizedBox(width: 8), // const
+          const Text("Aggiungi Fornitore"), // const
         ],
       ),
       content: Form(
@@ -29,7 +32,7 @@ class FornitoreDialog extends StatelessWidget {
               controller: nomeController,
               decoration: InputDecoration(
                 labelText: "Nome fornitore",
-                prefixIcon: Icon(Icons.badge),
+                prefixIcon: const Icon(Icons.badge), // const
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -41,12 +44,12 @@ class FornitoreDialog extends StatelessWidget {
                 return null;
               },
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12), // const
             TextFormField(
               controller: numeroController,
               decoration: InputDecoration(
                 labelText: "Numero WhatsApp",
-                prefixIcon: Icon(Icons.phone),
+                prefixIcon: const Icon(Icons.phone), // const
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -75,8 +78,8 @@ class FornitoreDialog extends StatelessWidget {
             onSave(nome, numero);
             Navigator.of(context).pop();
           },
-          icon: Icon(Icons.save),
-          label: Text("Salva"),
+          icon: const Icon(Icons.save), // const
+          label: const Text("Salva"), // const
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.teal,
             foregroundColor: Colors.white,

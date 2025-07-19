@@ -1,19 +1,12 @@
 // ignore_for_file: unused_import, unused_local_variable, unnecessary_cast, deprecated_member_use
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:async';
-import '../main.dart';
-import 'addproductform.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'ordinerapido.dart';
+import 'package:provider/provider.dart';
+import '../provider/product_provider.dart';
 import '../widgets/info_box.dart';
 import '../widgets/product_card.dart';
 import '../widgets/main_button.dart';
-import 'package:provider/provider.dart';
-import '../provider/product_provider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,7 +14,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String dataOggi = DateFormat('d MMMM', 'it_IT').format(DateTime.now());
+  String get dataOggi =>
+      DateFormat('d MMMM yyyy', 'it_IT').format(DateTime.now());
   bool _initialized = false;
 
   @override
@@ -38,229 +32,145 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(90),
-        child: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-              gradient: LinearGradient(
-                colors: [Colors.teal.shade700, Colors.teal.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.flatware, size: 28, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Plaza Storage',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Spacer(),
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.person, color: Colors.teal),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          dataOggi,
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        Spacer(),
-                        Text(
-                          'Benvenuto',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 2,
+        title: Row(
+          children: [
+            const Icon(Icons.inventory_2, color: Color(0xFF009688), size: 28),
+            const SizedBox(width: 10),
+            const Text(
+              'Plaza Storage',
+              style: TextStyle(
+                color: Color(0xFF009688),
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                letterSpacing: 1.2,
               ),
             ),
-          ),
+            const Spacer(),
+            Text(
+              dataOggi,
+              style: const TextStyle(
+                color: Color(0xFF757575),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
+        toolbarHeight: 70,
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, _) {
-          try {
-            if (provider.loading) {
-              return Center(child: CircularProgressIndicator());
-            }
-            final prodotti = provider.prodotti;
-            if (prodotti.isEmpty) {
-              return Center(child: Text('Nessun prodotto presente'));
-            }
-            final sottoSoglia =
-                prodotti.where((p) => p.quantita < p.soglia).length;
-            final esauriti = prodotti.where((p) => p.quantita == 0).length;
-            final prodottiFiltrati =
-                prodotti
-                    .where((p) => p.quantita == 0 || p.quantita < p.soglia)
-                    .toList();
-            // Nessuno scroll: mostro tutto in una colonna
-            return Column(
+          if (provider.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final prodotti = provider.prodotti;
+          final sottoSoglia =
+              prodotti
+                  .where((p) => p.quantita < p.soglia && p.quantita > 0)
+                  .toList();
+          final esauriti = prodotti.where((p) => p.quantita == 0).toList();
+          final critici =
+              prodotti
+                  .where((p) => p.quantita == 0 || p.quantita < p.soglia)
+                  .toList();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isLarge = constraints.maxWidth > 600;
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        SizedBox(
-                          width:
-                              isLarge
-                                  ? constraints.maxWidth * 0.45
-                                  : double.infinity,
-                          height: 133,
-                          child: InfoBox(
-                            title: 'Sotto soglia',
-                            value: sottoSoglia,
-                            gradientColors: [
-                              Color(0xFFFFE16D),
-                              Color(0xFFFFD54F),
-                            ],
-                            icon: Icons.warning_amber_rounded,
-                            iconColor: Colors.orange,
-                          ),
-                        ),
-                        SizedBox(
-                          width:
-                              isLarge
-                                  ? constraints.maxWidth * 0.45
-                                  : double.infinity,
-                          height: 133,
-                          child: InfoBox(
-                            title: 'Esauriti',
-                            value: esauriti,
-                            gradientColors: [
-                              Color(0xFFFF8A80),
-                              Color(0xFFFF5252),
-                            ],
-                            icon: Icons.error,
-                            iconColor: Colors.red,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.teal),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Prodotti da ordinare',
-                        style: TextStyle(fontSize: 25),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoBox(
+                        title: 'Sotto soglia',
+                        value: sottoSoglia.length,
+                        gradientColors: const [
+                          Color(0xFFFFE16D),
+                          Color(0xFFFFD54F),
+                        ],
+                        icon: Icons.warning_amber_rounded,
+                        iconColor: Colors.orange,
                       ),
-                      SizedBox(height: 8),
-                      prodottiFiltrati.isEmpty
-                          ? Center(child: Text('Nessun prodotto da ordinare'))
-                          : Column(
-                            children: [
-                              for (final prodotto in prodottiFiltrati)
-                                ProductCard(
-                                  nome: prodotto.nome,
-                                  quantita: prodotto.quantita,
-                                  soglia: prodotto.soglia,
-                                ),
-                            ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InfoBox(
+                        title: 'Esauriti',
+                        value: esauriti.length,
+                        gradientColors: const [
+                          Color(0xFFFF8A80),
+                          Color(0xFFFF5252),
+                        ],
+                        icon: Icons.error,
+                        iconColor: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Prodotti da ordinare',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF212121),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                critici.isEmpty
+                    ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                  child: MainButton(
-                    label: 'Genera ordine',
-                    icon: Icons.note_add,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OrdineRapidoPage(),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Nessun prodotto critico',
+                          style: TextStyle(
+                            color: Color(0xFF757575),
+                            fontSize: 16,
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    )
+                    : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: critici.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final prodotto = critici[index];
+                        return ProductCard(
+                          nome: prodotto.nome,
+                          quantita: prodotto.quantita,
+                          soglia: prodotto.soglia,
+                          suggerita: -1, // visualizza solo nome e stato
+                          onEdit: null,
+                          onDelete: null,
+                          showEditDelete: false,
+                        );
+                      },
+                    ),
+                const SizedBox(height: 80), // Spazio per la bottom nav
               ],
-            );
-          } catch (e, st) {
-            print('ERRORE UI HOME:  $e\n$st');
-            return Center(
-              child: Text('Errore nella visualizzazione della home.'),
-            );
-          }
+            ),
+          );
         },
       ),
     );
-  }
-
-  Stream<Map<String, int>> prodottiStatsStream() {
-    return FirebaseFirestore.instance.collection('prodotti').snapshots().map((
-      snapshot,
-    ) {
-      int sottoSogliaCount = 0;
-      int esauritiCount = 0;
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final quantita = data['quantita'] ?? 0;
-        final soglia = data['soglia'] ?? 0;
-
-        if (quantita == 0) {
-          esauritiCount++;
-        } else if (quantita < soglia) {
-          sottoSogliaCount++;
-        }
-      }
-
-      return {'sottoSoglia': sottoSogliaCount, 'esauriti': esauritiCount};
-    });
   }
 }

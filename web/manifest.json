@@ -1,6 +1,6 @@
 {
-    "name": "plaza_storage",
-    "short_name": "plaza_storage",
+    "name": "Stockely",
+    "short_name": "Stockely",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

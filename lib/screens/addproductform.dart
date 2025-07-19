@@ -7,7 +7,11 @@ import 'package:firebase_core/firebase_core.dart';
 class AddProductForm extends StatefulWidget {
   final Function(Map<String, dynamic>) onSave;
   final Map<String, dynamic>? prodottoDaModificare;
-  const AddProductForm({Key? key, this.prodottoDaModificare, required this.onSave}) : super(key: key);
+  const AddProductForm({
+    Key? key,
+    this.prodottoDaModificare,
+    required this.onSave,
+  }) : super(key: key);
 
   @override
   State<AddProductForm> createState() => _AddProductFormState();
@@ -18,14 +22,22 @@ class _AddProductFormState extends State<AddProductForm> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _quantitaController = TextEditingController();
   final TextEditingController _sogliaController = TextEditingController();
+  final TextEditingController _categoriaController = TextEditingController();
+  final TextEditingController _prezzoController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     if (widget.prodottoDaModificare != null) {
       _nomeController.text = widget.prodottoDaModificare!['nome'];
-      _quantitaController.text = widget.prodottoDaModificare!['quantita'].toString();
-      _sogliaController.text = widget.prodottoDaModificare!['soglia'].toString();
+      _quantitaController.text =
+          widget.prodottoDaModificare!['quantita'].toString();
+      _sogliaController.text =
+          widget.prodottoDaModificare!['soglia'].toString();
+      _categoriaController.text =
+          widget.prodottoDaModificare!['categoria'] ?? '';
+      _prezzoController.text =
+          widget.prodottoDaModificare!['prezzoUnitario']?.toString() ?? '';
     }
   }
 
@@ -34,6 +46,8 @@ class _AddProductFormState extends State<AddProductForm> {
     _nomeController.dispose();
     _quantitaController.dispose();
     _sogliaController.dispose();
+    _categoriaController.dispose();
+    _prezzoController.dispose();
     super.dispose();
   }
 
@@ -50,7 +64,11 @@ class _AddProductFormState extends State<AddProductForm> {
               controller: _nomeController,
               label: 'Nome Prodotto',
               icon: Icons.inventory_2_outlined,
-              validator: (value) => value == null || value.isEmpty ? 'Campo obbligatorio' : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Campo obbligatorio'
+                          : null,
             ),
             SizedBox(height: 16),
             _buildTextField(
@@ -58,7 +76,11 @@ class _AddProductFormState extends State<AddProductForm> {
               label: 'Quantità',
               icon: Icons.numbers,
               keyboardType: TextInputType.number,
-              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero valido' : null,
+              validator:
+                  (value) =>
+                      int.tryParse(value ?? '') == null
+                          ? 'Inserisci un numero valido'
+                          : null,
             ),
             SizedBox(height: 16),
             _buildTextField(
@@ -66,7 +88,34 @@ class _AddProductFormState extends State<AddProductForm> {
               label: 'Soglia minima di avviso',
               icon: Icons.warning_amber_outlined,
               keyboardType: TextInputType.number,
-              validator: (value) => int.tryParse(value ?? '') == null ? 'Inserisci un numero valido' : null,
+              validator:
+                  (value) =>
+                      int.tryParse(value ?? '') == null
+                          ? 'Inserisci un numero valido'
+                          : null,
+            ),
+            SizedBox(height: 16),
+            _buildTextField(
+              controller: _categoriaController,
+              label: 'Categoria',
+              icon: Icons.category,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Campo obbligatorio'
+                          : null,
+            ),
+            SizedBox(height: 16),
+            _buildTextField(
+              controller: _prezzoController,
+              label: 'Prezzo unitario',
+              icon: Icons.euro,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              validator:
+                  (value) =>
+                      double.tryParse(value ?? '') == null
+                          ? 'Inserisci un prezzo valido'
+                          : null,
             ),
             SizedBox(height: 32),
             SizedBox(
@@ -74,7 +123,9 @@ class _AddProductFormState extends State<AddProductForm> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   padding: EdgeInsets.symmetric(vertical: 16),
                   elevation: 4,
                 ),
@@ -85,13 +136,21 @@ class _AddProductFormState extends State<AddProductForm> {
                       'nome': _nomeController.text.trim(),
                       'quantita': int.parse(_quantitaController.text),
                       'soglia': int.parse(_sogliaController.text),
+                      'categoria': _categoriaController.text.trim(),
+                      'prezzoUnitario': double.parse(_prezzoController.text),
+                      'consumati': 0,
+                      'ultimaModifica': DateTime.now(),
                     };
                     widget.onSave(newProduct);
                   }
                 },
                 child: Text(
                   'Salva',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -149,15 +208,18 @@ class ProdottiPage extends StatefulWidget {
 }
 
 class _ProdottiPageState extends State<ProdottiPage> {
-  final CollectionReference prodottiRef = FirebaseFirestore.instance.collection('prodotti');
+  final CollectionReference prodottiRef = FirebaseFirestore.instance.collection(
+    'prodotti',
+  );
 
   Future<void> _aggiungiProdotto() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Aggiungi prodotto'),
-        content: AddProductForm(onSave: (newProduct) {  },),
-    ),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Aggiungi prodotto'),
+            content: AddProductForm(onSave: (newProduct) {}),
+          ),
     );
 
     if (result != null) {
@@ -166,13 +228,20 @@ class _ProdottiPageState extends State<ProdottiPage> {
     }
   }
 
-  Future<void> _modificaProdotto(String id, Map<String, dynamic> prodotto) async {
+  Future<void> _modificaProdotto(
+    String id,
+    Map<String, dynamic> prodotto,
+  ) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Modifica prodotto'),
-        content: AddProductForm(prodottoDaModificare: prodotto, onSave: (newProduct){ }),
-      ),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Modifica prodotto'),
+            content: AddProductForm(
+              prodottoDaModificare: prodotto,
+              onSave: (newProduct) {},
+            ),
+          ),
     );
 
     if (result != null) {
@@ -184,9 +253,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Gestione Prodotti'),
-      ),
+      appBar: AppBar(title: Text('Gestione Prodotti')),
       body: StreamBuilder<QuerySnapshot>(
         stream: prodottiRef.snapshots(),
         builder: (context, snapshot) {
@@ -209,7 +276,9 @@ class _ProdottiPageState extends State<ProdottiPage> {
               final data = prodotto.data()! as Map<String, dynamic>;
               return ListTile(
                 title: Text(data['nome'] ?? ''),
-                subtitle: Text('Quantità: ${data['quantita']}, Soglia: ${data['soglia']}'),
+                subtitle: Text(
+                  'Quantità: ${data['quantita']}, Soglia: ${data['soglia']}',
+                ),
                 trailing: IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () => _modificaProdotto(prodotto.id, data),

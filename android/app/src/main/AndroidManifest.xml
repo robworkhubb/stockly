@@ -5,7 +5,7 @@
 
 
     <application
-        android:label="Plaza Storage"
+        android:label="Stockely"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

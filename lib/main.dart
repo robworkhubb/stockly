@@ -3,16 +3,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:plazastorage/screens/addproductform.dart';
-import 'package:plazastorage/screens/home_page.dart';
+import 'package:stockely/screens/addproductform.dart';
+import 'package:stockely/screens/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:stockely/widgets/floating_navbar.dart';
 import 'services/firebase_options.dart';
-import 'package:plazastorage/screens/prodotti_page.dart' as prodotti;
+import 'package:stockely/screens/prodotti_page.dart' as prodotti;
 import 'dart:async';
 import 'theme.dart';
 import 'package:provider/provider.dart';
 import 'provider/product_provider.dart';
-import 'package:plazastorage/screens/ordinerapido.dart';
+import 'package:stockely/screens/ordinerapido.dart';
+import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,58 +32,45 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Gestione Magazzino',
-      theme: ThemeData(primarySwatch: Colors.teal),
-      home: MainNavigation(),
-    );
-  }
-}
-
 class MainNavigation extends StatefulWidget {
+  MainNavigation({Key? key}) : super(key: key);
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
+  late TabController tabController;
+
   final List<Widget> _pages = [
     HomePage(),
     prodotti.ProdottiPage(),
     OrdineRapidoPage(),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
+  @override
+  void initState() {
+    super.initState();
+    tabController = TabController(length: _pages.length, vsync: this);
+    tabController.animation?.addListener(() {
+      final value = tabController.animation!.value.round();
+      if (value != _selectedIndex && mounted) {
+        setState(() {
+          _selectedIndex = value;
+        });
+      }
     });
   }
 
   @override
+  void dispose() {
+    tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        elevation: 12,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2),
-            label: 'Prodotti',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.send), label: 'Ordine'),
-        ],
-      ),
-    );
+    return FloatingBottomNavBar();
   }
 }
