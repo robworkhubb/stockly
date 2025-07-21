@@ -1,7 +1,6 @@
-// ignore_for_file: unused_import, unused_element, unused_local_variable, deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/fornitore_model.dart';
 import '../provider/fornitore_provider.dart';
@@ -190,7 +189,7 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
 
   @override
   Widget build(BuildContext context) {
-    String dataOggi = DateTime.now().toLocal().toString().substring(0, 10);
+    String dataOggi = DateFormat('d MMMM yyyy', 'it_IT').format(DateTime.now());
     final fornitoreProvider = Provider.of<FornitoreProvider>(context);
     final fornitori = fornitoreProvider.fornitori;
 
@@ -254,7 +253,7 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

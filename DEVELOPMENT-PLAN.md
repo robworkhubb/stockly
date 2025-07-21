@@ -26,6 +26,26 @@ Questo disaccoppiamento permette di:
 -   **Testare la logica di business in isolamento**: È possibile testare i repository e i provider usando dati finti ("mock"), senza dipendere da Firebase.
 -   **Mantenere il codice organizzato e leggibile**.
 
+## 🚀 Strategie di Ottimizzazione e UX
+
+Per garantire un'esperienza utente fluida e reattiva su tutte le piattaforme, sono state adottate le seguenti strategie di ottimizzazione:
+
+### 1. Rendering Efficiente delle Liste
+-   **`ListView.builder`**: Tutte le liste dinamiche utilizzano `ListView.builder` per renderizzare solo gli elementi visibili sullo schermo, riducendo il consumo di memoria e migliorando le performance, specialmente con grandi quantità di dati.
+-   **`SliverAppBar` e `CustomScrollView`**: Per le schermate con scrolling complesso (come la Dashboard), viene utilizzata una combinazione di `CustomScrollView` e `SliverAppBar` per creare effetti di scrolling avanzati (es. AppBar che collassa) e gestire in modo efficiente widget di diverse dimensioni.
+
+### 2. Gestione dello Stato Ottimizzata
+-   **`Selector` invece di `Consumer`**: Dove possibile, viene utilizzato il widget `Selector` del pacchetto `provider` per ricostruire solo i widget specifici che dipendono da una parte dello stato. Questo evita rebuild inutili di intere porzioni dell'albero dei widget, rendendo la UI più scattante.
+-   **`listen: false`**: Le chiamate ai metodi dei provider che non richiedono un aggiornamento della UI (es. in `onPressed`) vengono eseguite con `listen: false` per prevenire rebuild non necessari.
+
+### 3. UX Adattiva per Piattaforma
+-   **Comportamento dello Scrolling**: L'app adatta il comportamento dello scrolling alla piattaforma corrente. Utilizza `BouncingScrollPhysics` su iOS per l'effetto "rimbalzo" e `ClampingScrollPhysics` su Android e web per uno scrolling più "bloccato", offrendo un'esperienza nativa.
+-   **Controlli Nativi**: In futuro, si potrebbe estendere questo approccio per utilizzare widget specifici della piattaforma (es. `Cupertino` per iOS, `Material` per Android) dove appropriato.
+
+### 4. Refactoring della UI per Performance
+-   **Uso estensivo di `const`**: I widget che non cambiano mai vengono dichiarati come `const`. Questo permette a Flutter di "skippare" la loro ricostruzione durante i rebuild, migliorando significativamente le performance.
+-   **Widget Piccoli e Riutilizzabili**: La UI è stata suddivisa in widget più piccoli e specializzati. Questo non solo migliora la leggibilità e la manutenibilità del codice, ma riduce anche l'impatto dei rebuild, poiché solo i widget interessati da un cambiamento di stato vengono ridisegnati.
+
 ### 🎯 Obiettivi principali
 - Gestire piccoli magazzini o dispense in modo veloce.
 - Ricevere **notifiche push locali** per prodotti esauriti o sotto soglia.
