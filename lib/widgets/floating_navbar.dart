@@ -1,34 +1,29 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:stockly/screens/dashboard_page.dart';
 import 'package:stockly/screens/home_page.dart';
 import 'package:stockly/screens/ordinerapido.dart';
 import 'package:stockly/screens/prodotti_page.dart';
-import 'package:stockly/screens/dashboard_page.dart';
+import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 
 class FloatingBottomNavBar extends StatefulWidget {
   @override
   _FloatingBottomNavBarState createState() => _FloatingBottomNavBarState();
 }
 
-class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
-    with SingleTickerProviderStateMixin {
+class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> {
   int _selectedIndex = 0;
-  late final PageController _pageController;
 
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: 0);
-  }
+  final List<Widget> _pages = [
+    Center(child: HomePage()),
+    Center(child: DashboardPage()),
+    Center(child: ProdottiPage()),
+    Center(child: OrdineRapidoPage()),
+  ];
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
-    _pageController.animateToPage(
-      index,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   @override
@@ -44,16 +39,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
         children: [
-          PageView(
-            controller: _pageController,
-            physics: BouncingScrollPhysics(),
-            onPageChanged: (index) => setState(() => _selectedIndex = index),
-            children: [
-              Center(child: HomePage()),
-              Center(child: DashboardPage()),
-              Center(child: ProdottiPage()),
-              Center(child: OrdineRapidoPage()),
-            ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: Container(
+              key: ValueKey<int>(_selectedIndex),
+              child: _pages[_selectedIndex],
+            ),
           ),
           Positioned(
             bottom: 20,

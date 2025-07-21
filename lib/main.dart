@@ -6,10 +6,10 @@ import 'package:stockly/data/repositories/fornitore_repository_impl.dart';
 import 'package:stockly/data/repositories/product_repository_impl.dart';
 import 'package:stockly/provider/fornitore_provider.dart';
 import 'package:stockly/provider/product_provider.dart';
+import 'package:stockly/screens/splash_screen.dart';
 import 'package:stockly/services/firestore_service.dart';
 import 'package:stockly/firebase_options.dart';
 import 'package:stockly/theme.dart';
-import 'package:stockly/widgets/floating_navbar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +34,7 @@ void main() async {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: FloatingBottomNavBar(),
+        home: const SplashScreen(),
       ),
     ),
   );

@@ -246,7 +246,7 @@ class _CategoryChart extends StatelessWidget {
                                             .toList()
                                             .indexOf(entry.key) %
                                         Colors.primaries.length]
-                                    .withOpacity(0.85),
+                                    .withValues(alpha: 0.85),
                                 radius: 60,
                                 titleStyle: TextStyle(
                                   fontSize: 12,
@@ -268,7 +268,7 @@ class _CategoryChart extends StatelessWidget {
                     final color = Colors
                         .primaries[categoryDist.keys.toList().indexOf(cat) %
                             Colors.primaries.length]
-                        .withOpacity(0.85);
+                        .withValues(alpha: 0.85);
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -370,7 +370,7 @@ class _MonthlyExpenseChart extends StatelessWidget {
                                   223,
                                   223,
                                   223,
-                                ).withOpacity(0.08),
+                                ).withValues(alpha: 0.08),
                               ),
                             ),
                           ],
