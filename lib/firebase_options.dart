@@ -17,13 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return const FirebaseOptions(
-        apiKey: 'AIzaSyAjz5t6PCJY-JfxamUEFvbyIJLwkgbwiF4',
-        appId: '1:625883263719:android:86754d24f7b1b981b2e842',
-        messagingSenderId: '625883263719',
-        projectId: 'plaza-storage-8833d',
-        storageBucket: 'plaza-storage-8833d.firebasestorage.app',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -52,9 +46,18 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCjAojo8RO_ohtiXfpLyULfyEgqoI8I8yo',
+    appId: '1:625883263719:web:0c48d98c250ea480b2e842',
+    messagingSenderId: '625883263719',
+    projectId: 'plaza-storage-8833d',
+    authDomain: 'plaza-storage-8833d.firebaseapp.com',
+    storageBucket: 'plaza-storage-8833d.firebasestorage.app',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAjz5t6PCJY-JfxamUEFvbyIJLwkgbwiF4',
-    appId: '1:625883263719:android:86754d24f7b1b981b2e842',
+    appId: '1:625883263719:android:dd10e716fe024e1fb2e842',
     messagingSenderId: '625883263719',
     projectId: 'plaza-storage-8833d',
     storageBucket: 'plaza-storage-8833d.firebasestorage.app',
@@ -62,10 +65,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCTi2zB0mDxm71GWPwGaCR1KX8q14tVAOs',
-    appId: '1:625883263719:ios:d6ab0dd7163b872ab2e842',
+    appId: '1:625883263719:ios:daca289dca926fb5b2e842',
     messagingSenderId: '625883263719',
     projectId: 'plaza-storage-8833d',
     storageBucket: 'plaza-storage-8833d.firebasestorage.app',
-    iosBundleId: 'com.example.plazaStorage',
+    iosBundleId: 'com.stockly.app',
   );
 }

@@ -1,13 +1,14 @@
 // ignore_for_file: unused_import, unused_element, unused_local_variable, deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/product_card.dart';
-import '../widgets/main_button.dart';
-import '../widgets/fornitore_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/fornitore_model.dart';
+import '../provider/fornitore_provider.dart';
 import '../provider/product_provider.dart';
+import '../widgets/fornitore_dialog.dart';
+import '../widgets/main_button.dart';
+import '../widgets/product_card.dart';
 
 class OrdineRapidoPage extends StatefulWidget {
   const OrdineRapidoPage({Key? key}) : super(key: key);
@@ -17,43 +18,24 @@ class OrdineRapidoPage extends StatefulWidget {
 }
 
 class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
-  Map<String, String> fornitori = {};
-  Map<String, String> _fornitoriId = {};
-  String? fornitoreSelezionato;
+  String? _selectedFornitoreId;
 
   @override
-  void initState() {
-    super.initState();
-    _caricaFornitori();
-  }
-
-  void _caricaFornitori() {
-    FirebaseFirestore.instance.collection('fornitori').snapshots().listen((
-      snapshot,
-    ) {
-      Map<String, String> mappaFornitori = {};
-      Map<String, String> mappaId = {};
-      for (var doc in snapshot.docs) {
-        final dati = doc.data();
-        final nome = dati['nome'] ?? '';
-        final numero = dati['numero'] ?? '';
-        if (nome.isNotEmpty && numero.isNotEmpty) {
-          mappaFornitori[nome] = numero;
-          mappaId[nome] = doc.id;
-        }
-      }
-      setState(() {
-        fornitori = mappaFornitori;
-        _fornitoriId = mappaId;
-        if (fornitoreSelezionato == null && fornitori.isNotEmpty) {
-          fornitoreSelezionato = fornitori.keys.first;
-        }
-      });
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final fornitoreProvider = Provider.of<FornitoreProvider>(
+      context,
+      listen: false,
+    );
+    if (_selectedFornitoreId == null &&
+        fornitoreProvider.fornitori.isNotEmpty) {
+      _selectedFornitoreId = fornitoreProvider.fornitori.first.id;
+    }
   }
 
   void _inviaOrdineWhatsapp(
     List<Map<String, dynamic>> prodottiDaOrdinare,
+    Fornitore? fornitore,
   ) async {
     if (prodottiDaOrdinare.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -61,28 +43,27 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
       );
       return;
     }
-    if (fornitoreSelezionato == null ||
-        !fornitori.containsKey(fornitoreSelezionato)) {
+    if (fornitore == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Seleziona un fornitore valido")),
       );
       return;
     }
-    String numero = fornitori[fornitoreSelezionato!]!;
+
+    String numero = fornitore.numero;
     final prefisso = '+39';
     if (!numero.startsWith(prefisso)) {
       numero = prefisso + numero;
     }
+
     String messaggio = Uri.encodeComponent(
-      "📦 Ordine:" +
+      "📦 Ordine: \n" +
           prodottiDaOrdinare
-              .map((p) {
-                int suggerita = (p['soglia'] as int) * 2;
-                return "- ${p['nome']} x $suggerita";
-              })
+              .map((p) => "- ${p['nome']} x ${(p['soglia'] as int) * 2}")
               .join("\n") +
-          "\n📅 Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}\nOrdine fatto con l'app Stockely ✅.",
+          "\n📅 Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}\nOrdine fatto con l'app Stockly ✅.",
     );
+
     final url = Uri.parse("https://wa.me/$numero?text=$messaggio");
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -93,10 +74,11 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
     }
   }
 
-  void _modificaFornitore(String nome, String numero, String docId) {
-    final nomeController = TextEditingController(text: nome);
-    final numeroController = TextEditingController(text: numero);
+  void _showEditFornitoreDialog(Fornitore fornitore) {
+    final nomeController = TextEditingController(text: fornitore.nome);
+    final numeroController = TextEditingController(text: fornitore.numero);
     final formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -147,20 +129,16 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
             ElevatedButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
-                final nuovoNome = nomeController.text.trim();
-                await FirebaseFirestore.instance
-                    .collection('fornitori')
-                    .doc(docId)
-                    .update({
-                      'nome': nuovoNome,
-                      'numero': numeroController.text.trim(),
-                    });
+                final updatedFornitore = Fornitore(
+                  id: fornitore.id,
+                  nome: nomeController.text.trim(),
+                  numero: numeroController.text.trim(),
+                );
+                await Provider.of<FornitoreProvider>(
+                  context,
+                  listen: false,
+                ).updateFornitore(updatedFornitore);
                 Navigator.of(context).pop();
-                if (fornitoreSelezionato == nome) {
-                  setState(() {
-                    fornitoreSelezionato = nuovoNome;
-                  });
-                }
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Fornitore aggiornato!")),
                 );
@@ -173,11 +151,7 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
     );
   }
 
-  void _rimuoviFornitore(String docId) async {
-    String? nomeEliminato;
-    fornitori.forEach((nome, id) {
-      if (_fornitoriId[nome] == docId) nomeEliminato = nome;
-    });
+  void _rimuoviFornitore(String fornitoreId) async {
     final conferma = await showDialog<bool>(
       context: context,
       builder:
@@ -197,19 +171,17 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
             ],
           ),
     );
+
     if (conferma == true) {
-      await FirebaseFirestore.instance
-          .collection('fornitori')
-          .doc(docId)
-          .delete();
-      setState(() {
-        if (fornitoreSelezionato == nomeEliminato) {
-          fornitoreSelezionato =
-              fornitori.keys.where((n) => n != nomeEliminato).isNotEmpty
-                  ? fornitori.keys.where((n) => n != nomeEliminato).first
-                  : null;
-        }
-      });
+      await Provider.of<FornitoreProvider>(
+        context,
+        listen: false,
+      ).deleteFornitore(fornitoreId);
+      if (_selectedFornitoreId == fornitoreId) {
+        setState(() {
+          _selectedFornitoreId = null;
+        });
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Fornitore eliminato!")));
@@ -219,6 +191,22 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
   @override
   Widget build(BuildContext context) {
     String dataOggi = DateTime.now().toLocal().toString().substring(0, 10);
+    final fornitoreProvider = Provider.of<FornitoreProvider>(context);
+    final fornitori = fornitoreProvider.fornitori;
+
+    // Assicura che _selectedFornitoreId sia valido
+    if (_selectedFornitoreId != null &&
+        !fornitori.any((f) => f.id == _selectedFornitoreId)) {
+      _selectedFornitoreId = fornitori.isNotEmpty ? fornitori.first.id : null;
+    } else if (_selectedFornitoreId == null && fornitori.isNotEmpty) {
+      _selectedFornitoreId = fornitori.first.id;
+    }
+
+    final fornitoreSelezionato =
+        _selectedFornitoreId != null
+            ? fornitori.firstWhere((f) => f.id == _selectedFornitoreId)
+            : null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -275,70 +263,70 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: fornitoreSelezionato,
-                            isExpanded: true,
-                            borderRadius: BorderRadius.circular(24),
-                            dropdownColor: Colors.white,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF009688),
-                              fontSize: 16,
-                            ),
-                            items:
-                                fornitori.keys.map((nomeFornitore) {
-                                  return DropdownMenuItem<String>(
-                                    value: nomeFornitore,
-                                    child: Row(
-                                      children: [
-                                        Text(nomeFornitore),
-                                        const Spacer(),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            final docId =
-                                                _fornitoriId[nomeFornitore]!;
-                                            _modificaFornitore(
-                                              nomeFornitore,
-                                              fornitori[nomeFornitore]!,
-                                              docId,
-                                            );
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            final docId =
-                                                _fornitoriId[nomeFornitore]!;
-                                            _rimuoviFornitore(docId);
-                                          },
-                                        ),
-                                      ],
+                        child:
+                            fornitoreProvider.loading
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedFornitoreId,
+                                    isExpanded: true,
+                                    borderRadius: BorderRadius.circular(24),
+                                    dropdownColor: Colors.white,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF009688),
+                                      fontSize: 16,
                                     ),
-                                  );
-                                }).toList(),
-                            onChanged: (nuovo) {
-                              if (nuovo != null) {
-                                setState(() {
-                                  fornitoreSelezionato = nuovo;
-                                });
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.arrow_drop_down,
-                              color: Color(0xFF009688),
-                            ),
-                          ),
-                        ),
+                                    items:
+                                        fornitori.map((fornitore) {
+                                          return DropdownMenuItem<String>(
+                                            value: fornitore.id,
+                                            child: Row(
+                                              children: [
+                                                Text(fornitore.nome),
+                                                const Spacer(),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit,
+                                                    color: Colors.blue,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed:
+                                                      () =>
+                                                          _showEditFornitoreDialog(
+                                                            fornitore,
+                                                          ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete,
+                                                    color: Colors.red,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed:
+                                                      () => _rimuoviFornitore(
+                                                        fornitore.id,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                    onChanged: (nuovoId) {
+                                      if (nuovoId != null) {
+                                        setState(() {
+                                          _selectedFornitoreId = nuovoId;
+                                        });
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Color(0xFF009688),
+                                    ),
+                                  ),
+                                ),
                       ),
                       const SizedBox(width: 12),
                       TextButton.icon(
@@ -348,9 +336,10 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                             builder:
                                 (ctx) => FornitoreDialog(
                                   onSave: (nome, numero) async {
-                                    await FirebaseFirestore.instance
-                                        .collection('fornitori')
-                                        .add({'nome': nome, 'numero': numero});
+                                    await fornitoreProvider.addFornitore(
+                                      nome,
+                                      numero,
+                                    );
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
@@ -379,8 +368,8 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     fornitoreSelezionato != null
-                        ? "Numero: ${fornitori[fornitoreSelezionato!]}"
-                        : "Seleziona un fornitore",
+                        ? "Numero: ${fornitoreSelezionato.numero}"
+                        : "Nessun fornitore selezionato",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -392,14 +381,15 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
               const SizedBox(height: 16),
               Expanded(
                 child: Consumer<ProductProvider>(
-                  builder: (context, provider, _) {
+                  builder: (context, productProvider, _) {
                     final prodottiDaOrdinare =
-                        provider.prodotti
+                        productProvider.prodotti
                             .where(
                               (p) => p.quantita == 0 || p.quantita < p.soglia,
                             )
                             .toList();
-                    if (provider.loading) {
+
+                    if (productProvider.loading) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (prodottiDaOrdinare.isEmpty) {
@@ -427,6 +417,7 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                     return ListView.separated(
                       itemCount: prodottiDaOrdinare.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      padding: const EdgeInsets.only(bottom: 160),
                       itemBuilder: (context, index) {
                         final prodotto = prodottiDaOrdinare[index];
                         return ProductCard(
@@ -457,17 +448,18 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                 label: "Genera ordine WhatsApp",
                 icon: Icons.send,
                 color: Colors.green,
-                onPressed: () async {
-                  final provider = Provider.of<ProductProvider>(
+                onPressed: () {
+                  final productProvider = Provider.of<ProductProvider>(
                     context,
                     listen: false,
                   );
                   final prodottiDaOrdinare =
-                      provider.prodotti
+                      productProvider.prodotti
                           .where(
                             (p) => p.quantita == 0 || p.quantita < p.soglia,
                           )
                           .toList();
+
                   _inviaOrdineWhatsapp(
                     prodottiDaOrdinare
                         .map(
@@ -478,9 +470,7 @@ class _OrdineRapidoPageState extends State<OrdineRapidoPage> {
                           },
                         )
                         .toList(),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ordine WhatsApp generato!')),
+                    fornitoreSelezionato,
                   );
                 },
               ),

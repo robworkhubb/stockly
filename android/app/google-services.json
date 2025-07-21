@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:625883263719:android:f174994d000b94d7b2e842",
+        "mobilesdk_app_id": "1:625883263719:android:dd10e716fe024e1fb2e842",
         "android_client_info": {
-          "package_name": "com.stockely.app"
+          "package_name": "com.stockly.app"
         }
       },
       "oauth_client": [],

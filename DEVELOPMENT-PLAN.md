@@ -1,7 +1,30 @@
-# Stockely – Piano di sviluppo
+# Stockly – Piano di sviluppo e Architettura
 
-**Stockely** è un'app mobile realizzata in Flutter per la gestione semplificata del magazzino.  
+**Stockly** è un'app mobile realizzata in Flutter per la gestione semplificata del magazzino.  
 Permette all'utente di aggiungere, modificare e monitorare prodotti, notificando automaticamente quando un prodotto è esaurito o sotto soglia.
+
+## 🧱 Architettura a 3 Strati (Clean Architecture)
+
+L'architettura di Stockly è basata sui principi della **Clean Architecture** per garantire una netta separazione delle responsabilità, alta testabilità e manutenibilità. Il progetto è suddiviso in 3 layer principali:
+
+1.  **Presentation Layer**: La UI dell'applicazione. Include widget, schermate e la gestione dello stato della UI (tramite Provider). Questo strato non conosce i dettagli dell'implementazione del database o di altre fonti dati.
+2.  **Domain Layer**: Il cuore della logica di business. Include i modelli dati (`Product`, `Fornitore`) e i "Repository" (contratti/interfacce) che definiscono le operazioni sui dati, senza specificare come vengono implementate. Questo strato è completamente indipendente dalla UI e dalla fonte dati.
+3.  **Data Layer**: L'implementazione concreta delle fonti dati. Include le implementazioni dei Repository e i servizi che comunicano con API esterne (come `FirestoreService`). Questo strato è responsabile di recuperare e salvare i dati.
+
+### Flusso dei Dati
+
+Il flusso dei dati segue una regola di dipendenza unidirezionale: `Presentation -> Domain -> Data`.
+
+```mermaid
+graph TD
+    A[Presentation Layer <br> (UI, Provider)] --> B[Domain Layer <br> (Repository, Models)];
+    B --> C[Data Layer <br> (FirestoreService, API)];
+```
+
+Questo disaccoppiamento permette di:
+-   **Sostituire facilmente la fonte dati**: Possiamo passare da Firestore a un altro database modificando solo il Data Layer, senza toccare la UI o la logica di business.
+-   **Testare la logica di business in isolamento**: È possibile testare i repository e i provider usando dati finti ("mock"), senza dipendere da Firebase.
+-   **Mantenere il codice organizzato e leggibile**.
 
 ### 🎯 Obiettivi principali
 - Gestire piccoli magazzini o dispense in modo veloce.
@@ -107,13 +130,13 @@ Permette all'utente di aggiungere, modificare e monitorare prodotti, notificando
 
 # Aggiornamenti 2025
 
-- L'app si chiama ora **Stockely** (ex Plaza Storage).
+- L'app si chiama ora **Stockly**.
 - Refactoring completo del modello Product: aggiunti categoria, prezzoUnitario, consumati, ultimaModifica.
 - Dashboard analitica con grafici moderni (fl_chart): top 5 prodotti consumati, distribuzione per categoria, spesa mensile totale.
 - Provider aggiornato per aggregazioni e performance.
 - UI e form modernizzati e coerenti.
 - Query Firestore ottimizzate e coerenti con il nuovo modello.
-- Tutti gli import ora sono `package:stockely/...`.
+- Tutti gli import ora sono `package:stockly/...`.
 
 # Esempi di utilizzo funzioni
 

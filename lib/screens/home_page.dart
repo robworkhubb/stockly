@@ -16,18 +16,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String get dataOggi =>
       DateFormat('d MMMM yyyy', 'it_IT').format(DateTime.now());
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Provider.of<ProductProvider>(context, listen: false).fetchProdotti();
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +29,7 @@ class _HomePageState extends State<HomePage> {
             const Icon(Icons.inventory_2, color: Color(0xFF009688), size: 28),
             const SizedBox(width: 10),
             const Text(
-              'Plaza Storage',
+              'Stockly',
               style: TextStyle(
                 color: Color(0xFF009688),
                 fontWeight: FontWeight.bold,

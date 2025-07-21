@@ -77,7 +77,7 @@ class DashboardPage extends StatelessWidget {
                                 color: Color(0xFF009688),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 70),
                             SizedBox(
                               height: 220,
                               child:
@@ -107,7 +107,12 @@ class DashboardPage extends StatelessWidget {
                                                     toY:
                                                         topProducts[i].consumati
                                                             .toDouble(),
-                                                    color: Color(0xFF009688),
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      58,
+                                                      255,
+                                                      235,
+                                                    ),
                                                     width: 22,
                                                     borderRadius:
                                                         BorderRadius.circular(
@@ -139,7 +144,7 @@ class DashboardPage extends StatelessWidget {
                                                           nome.substring(0, 8) +
                                                           '…';
                                                     return Transform.rotate(
-                                                      angle: -0.7, // circa -40°
+                                                      angle: -0.0, //
                                                       child: Padding(
                                                         padding:
                                                             const EdgeInsets.only(
@@ -361,8 +366,11 @@ class DashboardPage extends StatelessWidget {
                                               ),
                                               belowBarData: BarAreaData(
                                                 show: true,
-                                                color: Color(
-                                                  0xFF009688,
+                                                color: Color.fromARGB(
+                                                  255,
+                                                  223,
+                                                  223,
+                                                  223,
                                                 ).withOpacity(0.08),
                                               ),
                                             ),
@@ -406,9 +414,13 @@ class DashboardPage extends StatelessWidget {
                                                           months[idx],
                                                           style: TextStyle(
                                                             fontSize: 13,
-                                                            color: Color(
-                                                              0xFF757575,
-                                                            ),
+                                                            color:
+                                                                Color.fromARGB(
+                                                                  255,
+                                                                  240,
+                                                                  240,
+                                                                  240,
+                                                                ),
                                                             fontWeight:
                                                                 FontWeight.w600,
                                                           ),

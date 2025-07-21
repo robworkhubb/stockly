@@ -9,7 +9,7 @@ plugins {
 
 
 android {
-    namespace = "robertodarcangelo.plazastorage"
+    namespace = "com.stockly.app"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.stockely.app"
+        applicationId = "com.stockly.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,4 +1,4 @@
-# Plaza Storage – Design System
+# Stockly – Design System
 
 ## 1. Wireframe Visuali (Mermaid)
 
@@ -150,7 +150,7 @@ lib/
 
 ---
 
-**Questo design system è la base per un redesign moderno, business e facilmente scalabile di Plaza Storage.**
+**Questo design system è la base per un redesign moderno, business e facilmente scalabile di Stockly.**
 
 ---
 

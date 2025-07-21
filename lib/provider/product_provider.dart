@@ -1,40 +1,108 @@
-// ignore_for_file: unused_catch_stack
-
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../models/product_model.dart';
-import '../services/firebase_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../domain/repositories/product_repository.dart';
 
-class ProductProvider extends ChangeNotifier {
-  final FirebaseService _firebaseService = FirebaseService();
+class ProductProvider with ChangeNotifier {
+  final ProductRepository _productRepository;
   List<Product> _prodotti = [];
-  bool _loading = false;
+  bool _loading = true;
+  String _searchTerm = '';
+  String? _filterCategory;
 
-  List<Product> get prodotti =>
-      _prodotti; // Suggerimento: valuta UnmodifiableListView per sola lettura
+  ProductProvider(this._productRepository) {
+    _loadProducts();
+  }
+
+  List<Product> get prodotti {
+    List<Product> filteredProducts = _prodotti;
+
+    if (_filterCategory != null && _filterCategory!.isNotEmpty) {
+      filteredProducts =
+          filteredProducts
+              .where((p) => p.categoria == _filterCategory)
+              .toList();
+    }
+
+    if (_searchTerm.isNotEmpty) {
+      filteredProducts =
+          filteredProducts
+              .where(
+                (p) =>
+                    p.nome.toLowerCase().contains(_searchTerm.toLowerCase()) ||
+                    p.categoria.toLowerCase().contains(
+                      _searchTerm.toLowerCase(),
+                    ),
+              )
+              .toList();
+    }
+    return filteredProducts;
+  }
+
   bool get loading => _loading;
+  String? get activeCategory => _filterCategory;
+  List<String> get uniqueCategories =>
+      _prodotti.map((p) => p.categoria).toSet().toList();
 
-  Future<void> fetchProdotti() async {
-    _loading = true;
-    notifyListeners();
-    final snapshot =
-        await FirebaseFirestore.instance.collection('prodotti').get();
-    _prodotti =
-        snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .toList();
-    _loading = false;
+  void _loadProducts() {
+    _productRepository.getProducts().listen((prodotti) {
+      _prodotti = prodotti;
+      _loading = false;
+      notifyListeners();
+    });
+  }
+
+  Future<void> addProduct(Product product) async {
+    await _productRepository.addProduct(product);
+  }
+
+  Future<void> updateProduct(Product product) async {
+    await _productRepository.updateProduct(product);
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    await _productRepository.deleteProduct(productId);
+  }
+
+  Future<void> updateQuantity(Product product, int newQuantity) async {
+    int consumatiDelta = product.quantita - newQuantity;
+    if (consumatiDelta < 0) consumatiDelta = 0;
+
+    final updatedProduct = Product(
+      id: product.id,
+      nome: product.nome,
+      categoria: product.categoria,
+      quantita: newQuantity,
+      soglia: product.soglia,
+      prezzoUnitario: product.prezzoUnitario,
+      consumati: product.consumati + consumatiDelta,
+      ultimaModifica: DateTime.now(),
+    );
+    await updateProduct(updatedProduct);
+  }
+
+  void setSearchTerm(String term) {
+    _searchTerm = term;
     notifyListeners();
   }
 
-  // Top 5 prodotti consumati
-  List<Product> topConsumati({int top = 5}) {
+  void setFilterCategory(String? category) {
+    _filterCategory = category;
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    _searchTerm = '';
+    _filterCategory = null;
+    notifyListeners();
+  }
+
+  // Metodi di analisi per la dashboard
+  List<Product> topConsumati({int count = 5}) {
     final sorted = List<Product>.from(_prodotti)
       ..sort((a, b) => b.consumati.compareTo(a.consumati));
-    return sorted.take(top).toList();
+    return sorted.take(count).toList();
   }
 
-  // Distribuzione per categoria (per quantità consumata)
   Map<String, int> distribuzionePerCategoria() {
     final Map<String, int> dist = {};
     for (var p in _prodotti) {
@@ -43,7 +111,6 @@ class ProductProvider extends ChangeNotifier {
     return dist;
   }
 
-  // Spesa mensile totale (ipotizzando che ogni prodotto abbia ultimaModifica e prezzoUnitario)
   Map<String, double> spesaMensile() {
     final Map<String, double> monthly = {};
     for (var p in _prodotti) {
@@ -54,78 +121,5 @@ class ProductProvider extends ChangeNotifier {
       }
     }
     return monthly;
-  }
-
-  Future<void> addProdotto(Product prodotto) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('prodotti')
-        .add(prodotto.toFirestore());
-    _prodotti.add(
-      Product(
-        id: doc.id,
-        nome: prodotto.nome,
-        categoria: prodotto.categoria,
-        quantita: prodotto.quantita,
-        soglia: prodotto.soglia,
-        prezzoUnitario: prodotto.prezzoUnitario,
-        consumati: prodotto.consumati,
-        ultimaModifica: prodotto.ultimaModifica ?? DateTime.now(),
-      ),
-    );
-    notifyListeners();
-  }
-
-  Future<void> updateProdotto(String id, Product prodotto) async {
-    await FirebaseFirestore.instance
-        .collection('prodotti')
-        .doc(id)
-        .update(prodotto.toFirestore());
-    final index = _prodotti.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      _prodotti[index] = Product(
-        id: id,
-        nome: prodotto.nome,
-        categoria: prodotto.categoria,
-        quantita: prodotto.quantita,
-        soglia: prodotto.soglia,
-        prezzoUnitario: prodotto.prezzoUnitario,
-        consumati: prodotto.consumati,
-        ultimaModifica: DateTime.now(),
-      );
-      notifyListeners();
-    }
-  }
-
-  Future<void> deleteProdotto(String id) async {
-    await _firebaseService.deleteProdotto(id);
-    await fetchProdotti();
-  }
-
-  Future<void> updateQuantita(String id, int nuovaQuantita) async {
-    final index = _prodotti.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      final prodotto = _prodotti[index];
-      // Se decremento, aggiorno anche consumati
-      int nuovoConsumati = prodotto.consumati;
-      if (nuovaQuantita < prodotto.quantita) {
-        nuovoConsumati += (prodotto.quantita - nuovaQuantita);
-      }
-      final updated = Product(
-        id: prodotto.id,
-        nome: prodotto.nome,
-        categoria: prodotto.categoria,
-        quantita: nuovaQuantita,
-        soglia: prodotto.soglia,
-        prezzoUnitario: prodotto.prezzoUnitario,
-        consumati: nuovoConsumati,
-        ultimaModifica: DateTime.now(),
-      );
-      await FirebaseFirestore.instance
-          .collection('prodotti')
-          .doc(id)
-          .update(updated.toFirestore());
-      _prodotti[index] = updated;
-      notifyListeners();
-    }
   }
 }

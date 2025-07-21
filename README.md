@@ -1,6 +1,6 @@
-# 📦 Stockely
+# 📦 Stockly
 
-**Stockely** è un'app mobile Flutter progettata per la gestione di un piccolo magazzino. Permette di aggiungere, monitorare e ricevere notifiche sui prodotti in stock. L'app è pensata per essere semplice, veloce ed efficace, ideale per negozi, laboratori o piccole attività.
+**Stockly** è un'app mobile Flutter progettata per la gestione di un piccolo magazzino. Permette di aggiungere, monitorare e ricevere notifiche sui prodotti in stock. L'app è pensata per essere semplice, veloce ed efficace, ideale per negozi, laboratori o piccole attività.
 
 ## 🚀 Funzionalità principali
 
@@ -65,7 +65,7 @@ Queste funzioni permettono di monitorare rapidamente l'andamento del magazzino e
 
 🛠️ Come avviare l'app
 Clona il repository:
-git clone https://github.com/tuo-username/plaza-storage.git
+git clone https://github.com/tuo-username/stockly.git
 
 Installa le dipendenze:
 flutter pub get
@@ -90,7 +90,7 @@ Se ti piace il progetto, lascia una ⭐ su GitHub o contattami per collaborazion
 
 # Aggiornamenti 2025
 
-- L'app si chiama ora **Stockely** (ex Plaza Storage).
+- L'app si chiama ora **Stockly**.
 - Refactoring completo del modello Product: aggiunti categoria, prezzoUnitario, consumati, ultimaModifica.
 - Dashboard analitica con grafici moderni (fl_chart): top 5 prodotti consumati, distribuzione per categoria, spesa mensile totale.
 - Provider aggiornato per aggregazioni e performance.

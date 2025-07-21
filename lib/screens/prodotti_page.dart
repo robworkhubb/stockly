@@ -1,15 +1,12 @@
 // ignore_for_file: unnecessary_null_comparison, deprecated_member_use, unused_import, unused_element
 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:stockely/models/product_model.dart';
-import 'addproductform.dart';
-import '../widgets/product_card.dart';
-import '../widgets/main_button.dart';
 import 'package:provider/provider.dart';
-import '../provider/product_provider.dart';
+import 'package:stockly/models/product_model.dart';
+import 'package:stockly/provider/product_provider.dart';
+import '../widgets/product_card.dart';
+import 'addproductform.dart';
 
 class ProdottiPage extends StatefulWidget {
   const ProdottiPage({Key? key}) : super(key: key);
@@ -20,23 +17,14 @@ class ProdottiPage extends StatefulWidget {
 
 class _ProdottiPageState extends State<ProdottiPage> {
   String get dataOggi => DateFormat('d MMMM', 'it_IT').format(DateTime.now());
-  bool _initialized = false;
-  String _search = '';
-  String _filter = 'Tutti';
-  final List<String> _filtri = ['Tutti', 'Sotto soglia', 'Esauriti'];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Provider.of<ProductProvider>(context, listen: false).fetchProdotti();
-      });
-    }
+  void initState() {
+    super.initState();
+    // Non è più necessario chiamare fetchProdotti qui, il provider lo fa da solo.
   }
 
-  void _showProductDialog({Map<String, dynamic>? prodotto, String? id}) {
+  void _showProductDialog({Product? prodotto}) {
     showDialog(
       context: context,
       builder:
@@ -48,41 +36,29 @@ class _ProdottiPageState extends State<ProdottiPage> {
               prodotto == null ? 'Aggiungi Prodotto' : 'Modifica Prodotto',
             ),
             content: AddProductForm(
-              prodottoDaModificare: prodotto,
+              prodottoDaModificare: prodotto?.toMap(),
               onSave: (modifiche) async {
-                if (modifiche != null) {
-                  final provider = Provider.of<ProductProvider>(
-                    context,
-                    listen: false,
-                  );
-                  if (id == null) {
-                    await provider.addProdotto(
-                      Product(
-                        id: '',
-                        nome: modifiche['nome'],
-                        categoria: modifiche['categoria'] ?? '',
-                        quantita: modifiche['quantita'],
-                        soglia: modifiche['soglia'],
-                        prezzoUnitario: modifiche['prezzoUnitario'] ?? 0.0,
-                        consumati: modifiche['consumati'] ?? 0,
-                        ultimaModifica: DateTime.now(),
-                      ),
-                    );
-                  } else {
-                    await provider.updateProdotto(
-                      id,
-                      Product(
-                        id: id,
-                        nome: modifiche['nome'],
-                        categoria: modifiche['categoria'] ?? '',
-                        quantita: modifiche['quantita'],
-                        soglia: modifiche['soglia'],
-                        prezzoUnitario: modifiche['prezzoUnitario'] ?? 0.0,
-                        consumati: modifiche['consumati'] ?? 0,
-                        ultimaModifica: DateTime.now(),
-                      ),
-                    );
-                  }
+                if (modifiche == null) return;
+
+                final provider = Provider.of<ProductProvider>(
+                  context,
+                  listen: false,
+                );
+                final productData = Product(
+                  id: prodotto?.id ?? '',
+                  nome: modifiche['nome'],
+                  categoria: modifiche['categoria'] ?? '',
+                  quantita: modifiche['quantita'],
+                  soglia: modifiche['soglia'],
+                  prezzoUnitario: modifiche['prezzoUnitario'] ?? 0.0,
+                  consumati: prodotto?.consumati ?? 0,
+                  ultimaModifica: DateTime.now(),
+                );
+
+                if (prodotto == null) {
+                  await provider.addProduct(productData);
+                } else {
+                  await provider.updateProduct(productData);
                 }
                 Navigator.of(dialogContext).pop();
               },
@@ -91,29 +67,10 @@ class _ProdottiPageState extends State<ProdottiPage> {
     );
   }
 
-  List<Product> _filtraProdotti(List<Product> prodotti) {
-    List<Product> filtrati = prodotti;
-    if (_filter == 'Sotto soglia') {
-      filtrati =
-          prodotti
-              .where((p) => p.quantita < p.soglia && p.quantita > 0)
-              .toList();
-    } else if (_filter == 'Esauriti') {
-      filtrati = prodotti.where((p) => p.quantita == 0).toList();
-    }
-    if (_search.isNotEmpty) {
-      filtrati =
-          filtrati
-              .where(
-                (p) => p.nome.toLowerCase().contains(_search.toLowerCase()),
-              )
-              .toList();
-    }
-    return filtrati;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -159,7 +116,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE0F7FA), // teal chiaro
+                      color: const Color(0xFFE0F7FA),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -170,7 +127,8 @@ class _ProdottiPageState extends State<ProdottiPage> {
                       ],
                     ),
                     child: TextField(
-                      onChanged: (v) => setState(() => _search = v),
+                      onChanged:
+                          (value) => productProvider.setSearchTerm(value),
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF212121),
@@ -212,7 +170,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: _filter,
+                      value: productProvider.activeCategory ?? 'Tutti',
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       style: const TextStyle(
@@ -221,7 +179,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
                         fontSize: 16,
                       ),
                       items:
-                          _filtri
+                          ['Tutti', ...productProvider.uniqueCategories]
                               .map(
                                 (f) => DropdownMenuItem<String>(
                                   value: f,
@@ -229,7 +187,13 @@ class _ProdottiPageState extends State<ProdottiPage> {
                                 ),
                               )
                               .toList(),
-                      onChanged: (v) => setState(() => _filter = v!),
+                      onChanged: (value) {
+                        if (value == 'Tutti') {
+                          productProvider.setFilterCategory(null);
+                        } else {
+                          productProvider.setFilterCategory(value);
+                        }
+                      },
                       icon: const Icon(
                         Icons.arrow_drop_down,
                         color: Color(0xFF009688),
@@ -247,7 +211,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
                 if (provider.loading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final prodotti = _filtraProdotti(provider.prodotti);
+                final prodotti = provider.prodotti;
                 if (prodotti.isEmpty) {
                   return Center(
                     child: Column(
@@ -275,7 +239,7 @@ class _ProdottiPageState extends State<ProdottiPage> {
                     left: 16,
                     right: 16,
                     top: 16,
-                    bottom: 100, // spazio per bottom nav e FAB
+                    bottom: 100,
                   ),
                   itemCount: prodotti.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -285,34 +249,18 @@ class _ProdottiPageState extends State<ProdottiPage> {
                       nome: prodotto.nome,
                       quantita: prodotto.quantita,
                       soglia: prodotto.soglia,
-                      onDecrement: () async {
-                        if (prodotto.quantita > 0) {
-                          await provider.updateQuantita(
-                            prodotto.id,
+                      onDecrement:
+                          () => provider.updateQuantity(
+                            prodotto,
                             prodotto.quantita - 1,
-                          );
-                        }
-                      },
-                      onIncrement: () async {
-                        await provider.updateQuantita(
-                          prodotto.id,
-                          prodotto.quantita + 1,
-                        );
-                      },
-                      onEdit:
-                          () => _showProductDialog(
-                            prodotto: {
-                              'nome': prodotto.nome,
-                              'quantita': prodotto.quantita,
-                              'soglia': prodotto.soglia,
-                              'categoria': prodotto.categoria,
-                              'prezzo unitario': prodotto.prezzoUnitario,
-                            },
-                            id: prodotto.id,
                           ),
-                      onDelete: () async {
-                        await provider.deleteProdotto(prodotto.id);
-                      },
+                      onIncrement:
+                          () => provider.updateQuantity(
+                            prodotto,
+                            prodotto.quantita + 1,
+                          ),
+                      onEdit: () => _showProductDialog(prodotto: prodotto),
+                      onDelete: () => provider.deleteProduct(prodotto.id),
                     );
                   },
                 );

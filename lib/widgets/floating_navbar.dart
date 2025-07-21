@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:stockely/screens/home_page.dart';
-import 'package:stockely/screens/ordinerapido.dart';
-import 'package:stockely/screens/prodotti_page.dart';
-import 'package:stockely/screens/dashboard_page.dart';
+import 'package:stockly/screens/home_page.dart';
+import 'package:stockly/screens/ordinerapido.dart';
+import 'package:stockly/screens/prodotti_page.dart';
+import 'package:stockly/screens/dashboard_page.dart';
 
 class FloatingBottomNavBar extends StatefulWidget {
   @override

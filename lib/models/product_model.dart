@@ -21,9 +21,10 @@ class Product {
     this.ultimaModifica,
   });
 
-  factory Product.fromFirestore(Map<String, dynamic> data, String id) {
+  factory Product.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Product(
-      id: id,
+      id: doc.id,
       nome: data['nome'],
       categoria: data['categoria'] ?? '',
       quantita: data['quantita'],
@@ -37,13 +38,14 @@ class Product {
     );
   }
 
-  Map<String, dynamic> toFirestore() => {
+  Map<String, dynamic> toMap() => {
     'nome': nome,
     'categoria': categoria,
     'quantita': quantita,
     'soglia': soglia,
     'prezzoUnitario': prezzoUnitario,
     'consumati': consumati,
-    'ultimaModifica': ultimaModifica,
+    'ultimaModifica':
+        ultimaModifica != null ? Timestamp.fromDate(ultimaModifica!) : null,
   };
 }
